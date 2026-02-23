@@ -8,16 +8,16 @@
   --color-dark-800: #161616;
   --color-dark-700: #262626;
   
-  --color-primary-500: #059669;
-  --color-primary-600: #047857;
+  --color-primary-500: #D4A017;
+  --color-primary-600: #B8860B;
 }
 
 @layer base {
   body {
     @apply bg-dark-900 text-slate-200 font-sans antialiased;
     background-image: 
-      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(5, 150, 105, 0.06), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(5, 150, 105, 0.04), transparent);
+      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(212, 160, 23, 0.06), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(212, 160, 23, 0.04), transparent);
     background-attachment: fixed;
     animation: aurora 20s ease-in-out infinite alternate;
   }
@@ -26,18 +26,18 @@
 @keyframes aurora {
   0% {
     background-image:
-      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(5, 150, 105, 0.06), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(5, 150, 105, 0.04), transparent);
+      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(212, 160, 23, 0.06), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(212, 160, 23, 0.04), transparent);
   }
   50% {
     background-image:
-      radial-gradient(ellipse 70% 60% at 50% 60%, rgba(5, 150, 105, 0.08), transparent),
-      radial-gradient(ellipse 80% 30% at 30% 30%, rgba(5, 150, 105, 0.05), transparent);
+      radial-gradient(ellipse 70% 60% at 50% 60%, rgba(212, 160, 23, 0.08), transparent),
+      radial-gradient(ellipse 80% 30% at 30% 30%, rgba(212, 160, 23, 0.05), transparent);
   }
   100% {
     background-image:
-      radial-gradient(ellipse 60% 50% at 70% 70%, rgba(5, 150, 105, 0.06), transparent),
-      radial-gradient(ellipse 90% 40% at 10% 40%, rgba(5, 150, 105, 0.04), transparent);
+      radial-gradient(ellipse 60% 50% at 70% 70%, rgba(212, 160, 23, 0.06), transparent),
+      radial-gradient(ellipse 90% 40% at 10% 40%, rgba(212, 160, 23, 0.04), transparent);
   }
 }
 

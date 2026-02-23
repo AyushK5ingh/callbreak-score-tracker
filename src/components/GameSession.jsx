@@ -180,7 +180,7 @@ const GameSession = ({ onNavigate }) => {
         >
           <div className="text-7xl mb-6">🏆</div>
           <h1 className="text-4xl font-black text-white mb-2">{sorted[0].name} Wins!</h1>
-          <p className="text-emerald-400 font-bold text-lg mb-12">with {sorted[0].score} points</p>
+          <p className="text-amber-400 font-bold text-lg mb-12">with {sorted[0].score} points</p>
 
           <div className="space-y-3 w-full max-w-sm">
             {sorted.map((p, idx) => (
@@ -251,8 +251,8 @@ const GameSession = ({ onNavigate }) => {
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-emerald-400">{leader.name} leads!</p>
-                <p className="text-xs text-emerald-400/60 font-medium">with {leader.score} points</p>
+                <p className="text-sm font-bold text-amber-400">{leader.name} leads!</p>
+                <p className="text-xs text-amber-400/60 font-medium">with {leader.score} points</p>
               </div>
             </div>
           </motion.div>
@@ -269,7 +269,7 @@ const GameSession = ({ onNavigate }) => {
             {p.diff === 0 && p.score > 0 && (
               <div className="absolute top-2 right-2 bg-primary-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded shadow-lg">LEAD</div>
             )}
-            <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${p.name === 'Ayush' ? 'text-emerald-500' : p.name === 'Harsh' ? 'text-blue-500' : 'text-orange-500'}`}>
+            <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${p.name === 'Ayush' ? 'text-amber-500' : p.name === 'Harsh' ? 'text-blue-500' : 'text-orange-500'}`}>
               {p.name}
             </p>
             {rounds.length > 0 && liveNicknames.bidNicks[p.name] && (
@@ -404,7 +404,7 @@ const GameSession = ({ onNavigate }) => {
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={startHandLockIn}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 py-4 rounded-2xl font-black text-white flex items-center justify-center space-x-3 shadow-2xl shadow-emerald-600/30"
+              className="w-full bg-amber-600 hover:bg-amber-700 py-4 rounded-2xl font-black text-white flex items-center justify-center space-x-3 shadow-2xl shadow-amber-600/30"
             >
               <Save className="w-5 h-5" />
               <span>SAVE ROUND</span>

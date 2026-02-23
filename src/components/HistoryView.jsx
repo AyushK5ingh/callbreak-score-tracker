@@ -9,7 +9,7 @@ const TrendChart = ({ data, height = 80 }) => {
   if (!data) return null;
 
   const players = ['Ayush', 'Harsh', 'Mohit'];
-  const colors = { Ayush: '#059669', Harsh: '#3b82f6', Mohit: '#f97316' };
+  const colors = { Ayush: '#D4A017', Harsh: '#3b82f6', Mohit: '#f97316' };
   const allValues = players.flatMap(name => data[name]);
   const minVal = Math.min(...allValues);
   const maxVal = Math.max(...allValues);
@@ -109,7 +109,7 @@ const HistoryView = ({ onNavigate }) => {
       <div className="grid grid-cols-3 gap-3 mb-12">
         {['Ayush', 'Harsh', 'Mohit'].map((name) => (
           <div key={name} className="bg-dark-800 border border-white/5 p-4 rounded-3xl text-center">
-            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${name === 'Ayush' ? 'text-emerald-500' : name === 'Harsh' ? 'text-blue-500' : 'text-orange-500'}`}>{name}</p>
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${name === 'Ayush' ? 'text-amber-500' : name === 'Harsh' ? 'text-blue-500' : 'text-orange-500'}`}>{name}</p>
             <div className="flex flex-col items-center gap-0.5 mb-1">
               <NicknameBadge nick={bidNicks[name]} />
               <NicknameBadge nick={skillNicks[name]} />
@@ -130,7 +130,7 @@ const HistoryView = ({ onNavigate }) => {
 
       {/* Legend for trend chart */}
       <div className="flex items-center justify-center space-x-6 mb-6">
-        {[{ name: 'Ayush', color: 'bg-emerald-500' }, { name: 'Harsh', color: 'bg-blue-500' }, { name: 'Mohit', color: 'bg-orange-500' }].map(p => (
+        {[{ name: 'Ayush', color: 'bg-amber-500' }, { name: 'Harsh', color: 'bg-blue-500' }, { name: 'Mohit', color: 'bg-orange-500' }].map(p => (
           <div key={p.name} className="flex items-center space-x-1.5">
             <div className={`w-2 h-2 rounded-full ${p.color}`} />
             <span className="text-[9px] font-bold text-slate-500 uppercase">{p.name}</span>
@@ -213,9 +213,9 @@ const HistoryView = ({ onNavigate }) => {
                   {/* Comeback / Downfall tags */}
                   <div className="flex flex-wrap gap-2">
                     {analysis.comeback && (
-                      <div className="flex items-center space-x-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
-                        <TrendingUp className="w-3 h-3 text-emerald-400" />
-                        <span className="text-[8px] font-black text-emerald-400 uppercase">{analysis.comeback} — Comeback King 👑</span>
+                      <div className="flex items-center space-x-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+                        <TrendingUp className="w-3 h-3 text-amber-400" />
+                        <span className="text-[8px] font-black text-amber-400 uppercase">{analysis.comeback} — Comeback King 👑</span>
                       </div>
                     )}
                     {analysis.downfall && (

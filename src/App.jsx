@@ -19,7 +19,7 @@ function App() {
   const navigateTo = (newView) => setView(newView);
 
   return (
-    <div className="min-h-screen bg-dark-900 text-white font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-dark-900 text-white font-sans selection:bg-amber-500/30">
       {view === 'home' && <HomeView onNavigate={navigateTo} />}
       {view === 'game' && <GameSession onNavigate={navigateTo} />}
       {view === 'history' && <HistoryView onNavigate={navigateTo} />}
