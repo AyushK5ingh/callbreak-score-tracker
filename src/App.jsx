@@ -2,9 +2,19 @@ import React, { useState, useEffect } from 'react';
 import HomeView from './components/HomeView';
 import GameSession from './components/GameSession';
 import HistoryView from './components/HistoryView';
+import { syncFromCloud } from './utils/storage';
 
 function App() {
   const [view, setView] = useState('home'); // home, game, history
+
+  // Sync cloud data on app startup
+  useEffect(() => {
+    syncFromCloud().then(result => {
+      if (result.synced && result.count > 0) {
+        console.log(`☁️ Synced ${result.count} games from cloud`);
+      }
+    });
+  }, []);
 
   const navigateTo = (newView) => setView(newView);
 
@@ -18,3 +28,4 @@ function App() {
 }
 
 export default App;
+
