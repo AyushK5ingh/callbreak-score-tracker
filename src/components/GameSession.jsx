@@ -16,6 +16,7 @@ const GameSession = ({ onNavigate }) => {
   const [phase, setPhase] = useState('bid');
   const [popup, setPopup] = useState(null);
   const [timerActive, setTimerActive] = useState(false);
+  const [negativeRoast, setNegativeRoast] = useState(null);
   const [gameFinished, setGameFinished] = useState(false);
 
   const playersWithDiffs = getLeaderAndDiffs(players);
@@ -134,6 +135,27 @@ const GameSession = ({ onNavigate }) => {
     setCurrentRound({ bids: { Ayush: '', Harsh: '', Mohit: '' }, hands: { Ayush: '', Harsh: '', Mohit: '' } });
     setPhase('bid');
     setPopup(null);
+
+    // Check if anyone just went negative
+    const roastMessages = [
+      '📉 Down bad!',
+      '💀 Finished!',
+      '🪦 RIP score!',
+      '🤡 Clown move!',
+      '😭 Bechara!',
+      '🗑️ Absolute scenes!',
+    ];
+    const justWentNegative = newPlayers.filter((p, idx) => 
+      p.score < 0 && players[idx].score >= 0
+    );
+    if (justWentNegative.length > 0) {
+      const victim = justWentNegative[0];
+      const msg = roastMessages[Math.floor(Math.random() * roastMessages.length)];
+      playSound('error');
+      triggerHaptic('win');
+      setNegativeRoast({ name: victim.name, score: victim.score, message: msg });
+      setTimeout(() => setNegativeRoast(null), 2500);
+    }
   };
 
   const finishGame = () => {
@@ -217,6 +239,45 @@ const GameSession = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-dark-900 text-slate-200 font-outfit pb-40">
+
+      {/* Negative Score Roast Overlay */}
+      <AnimatePresence>
+        {negativeRoast && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+            onClick={() => setNegativeRoast(null)}
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0 }}
+              transition={{ type: 'spring', damping: 12 }}
+              className="text-center px-8"
+            >
+              <div className="text-8xl mb-4">💀</div>
+              <h2 className="text-3xl font-black text-rose-400 mb-2">{negativeRoast.name}</h2>
+              <p className="text-5xl font-black text-rose-500 mb-4">{negativeRoast.score}</p>
+              <p className="text-xl font-bold text-rose-300/80">{negativeRoast.message}</p>
+              {/* Falling skulls */}
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute text-2xl"
+                  style={{ left: `${10 + Math.random() * 80}%` }}
+                  initial={{ y: '-10vh', opacity: 0 }}
+                  animate={{ y: '110vh', opacity: [0, 1, 1, 0] }}
+                  transition={{ duration: 2 + Math.random(), delay: Math.random() * 0.5, repeat: Infinity }}
+                >
+                  {['💀', '☠️', '🪦', '📉', '🤡'][i % 5]}
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <nav className="p-6 flex items-center justify-between">
         <button onClick={() => onNavigate('home')} className="p-2 -ml-2 text-slate-400">
