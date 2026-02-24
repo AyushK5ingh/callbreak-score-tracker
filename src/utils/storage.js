@@ -11,23 +11,34 @@ const getLocalHistory = () => {
   return data ? JSON.parse(data) : [];
 };
 
+const saveLocalHistory = (history) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+};
+
 const saveLocal = (game) => {
   const history = getLocalHistory();
-  history.unshift(game);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  // Ensure we don't duplicate if already exists (e.g. during sync)
+  if (!history.find(g => g.timestamp === game.timestamp)) {
+    history.unshift(game);
+    saveLocalHistory(history);
+  }
 };
 
 // ─── Firestore (cloud sync) ─────────────────────────────────────
 
 const saveToFirestore = async (game) => {
   try {
+    // Only push essential fields to cloud (exclude internal flags)
+    const { cloudSynced, _docId, ...gameToPush } = game;
     const docRef = await addDoc(collection(db, FIRESTORE_COLLECTION), {
-      ...game,
+      ...gameToPush,
       createdAt: new Date().toISOString(),
     });
     console.log('☁️ Saved to Firestore:', docRef.id);
+    return true;
   } catch (err) {
     console.warn('Firestore save failed (will retry when online):', err.message);
+    return false;
   }
 };
 
@@ -59,7 +70,7 @@ export const getHistory = () => {
  * Save a brand new game (first round just played)
  */
 export const saveGame = (game) => {
-  saveLocal(game);
+  saveLocal({ ...game, cloudSynced: false });
   saveToFirestore(game);
 };
 
@@ -70,12 +81,12 @@ export const updateGame = (timestamp, updates) => {
   const history = getLocalHistory();
   const updated = history.map(g => {
     if (g.timestamp === timestamp) {
-      return { ...g, ...updates };
+      return { ...g, ...updates, cloudSynced: false }; // Mark for re-pushing
     }
     return g;
   });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  // Also push update to Firestore
+  saveLocalHistory(updated);
+  // Also push update to Firestore (queued)
   saveToFirestore({ ...updates, timestamp });
 };
 
@@ -98,7 +109,7 @@ export const toggleInsignificant = (timestamp) => {
     }
     return g;
   });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  saveLocalHistory(updated);
 };
 
 /**
@@ -114,55 +125,58 @@ export const syncFromCloud = async () => {
     
     console.log(`☁️ Cloud returned ${cloudGames.length} games`);
 
-    const localHistory = getLocalHistory();
+    let localHistory = getLocalHistory();
+    let localChanged = false;
 
-    // --- Pull: merge cloud games into local ---
-    let newGames = 0;
+    // --- 1. Pull: merge cloud games into local ---
     if (cloudGames.length > 0) {
       const localTimestamps = new Set(localHistory.map(g => g.timestamp));
       cloudGames.forEach(game => {
         if (!localTimestamps.has(game.timestamp)) {
           // Remove internal _docId before saving locally
           const { _docId, ...gameData } = game;
-          localHistory.push(gameData);
-          newGames++;
+          // Mark as synced since it came FROM the cloud
+          localHistory.push({ ...gameData, cloudSynced: true });
+          localChanged = true;
         }
       });
 
-      if (newGames > 0) {
+      if (localChanged) {
         localHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(localHistory));
-        console.log(`☁️ Merged ${newGames} new games from cloud`);
+        saveLocalHistory(localHistory);
+        console.log(`☁️ Merged new games from cloud`);
       }
 
-      // --- Clear cloud after pulling ---
-      let deleted = 0;
+      // --- 2. Clear cloud after pulling ---
+      // We only clear what we just saw to avoid deleting games pushed while we were merging
       for (const game of cloudGames) {
         if (game._docId) {
           await deleteFromFirestore(game._docId);
-          deleted++;
         }
       }
-      if (deleted > 0) {
-        console.log(`☁️ Cleared ${deleted} games from cloud (data is local now)`);
-      }
+      console.log(`☁️ Cleared sync bridge`);
     }
 
-    // --- Push: send local-only games to cloud for other devices ---
-    let pushed = 0;
-    for (const game of localHistory) {
-      // Only push games that weren't already in cloud
-      const wasInCloud = cloudGames.some(cg => cg.timestamp === game.timestamp);
-      if (!wasInCloud) {
-        await saveToFirestore(game);
-        pushed++;
+    // --- 3. Push: send unsynced local games to cloud ---
+    // A game needs pushing if cloudSynced is false OR it wasn't in the cloud snapshot we just got
+    let pushedCount = 0;
+    const cloudTimestamps = new Set(cloudGames.map(cg => cg.timestamp));
+    
+    const updatedHistory = localHistory.map(game => {
+      if (!game.cloudSynced && !cloudTimestamps.has(game.timestamp)) {
+        saveToFirestore(game); // Fire and forget
+        pushedCount++;
+        return { ...game, cloudSynced: true };
       }
-    }
-    if (pushed > 0) {
-      console.log(`☁️ Pushed ${pushed} local games to cloud for other devices`);
+      return game;
+    });
+
+    if (pushedCount > 0) {
+      saveLocalHistory(updatedHistory);
+      console.log(`☁️ Pushed ${pushedCount} games to cloud bridge`);
     }
 
-    return { synced: true, count: newGames };
+    return { synced: true, count: cloudGames.length };
   } catch (err) {
     console.warn('Cloud sync failed:', err.message);
     return { synced: false, count: 0 };
