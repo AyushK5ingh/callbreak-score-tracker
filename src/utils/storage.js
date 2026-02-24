@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 
 const STORAGE_KEY = 'callbreak_history';
 const FIRESTORE_COLLECTION = 'games';
@@ -33,7 +33,6 @@ const saveToFirestore = async (game) => {
 
 const getFirestoreHistory = async () => {
   try {
-    // Simple getDocs without orderBy — avoids needing a Firestore index
     const snapshot = await getDocs(collection(db, FIRESTORE_COLLECTION));
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
@@ -42,17 +41,43 @@ const getFirestoreHistory = async () => {
   }
 };
 
-// ─── Public API (dual-write) ────────────────────────────────────
+// ─── Public API ─────────────────────────────────────────────────
 
 export const getHistory = () => {
   return getLocalHistory();
 };
 
+/**
+ * Save a brand new game (first round just played)
+ */
 export const saveGame = (game) => {
-  // 1. Save to localStorage immediately (instant, works offline)
   saveLocal(game);
-  // 2. Save to Firestore (syncs when online)
   saveToFirestore(game);
+};
+
+/**
+ * Update an existing game in localStorage by timestamp
+ * Used for auto-saving round-by-round progress
+ */
+export const updateGame = (timestamp, updates) => {
+  const history = getLocalHistory();
+  const updated = history.map(g => {
+    if (g.timestamp === timestamp) {
+      return { ...g, ...updates };
+    }
+    return g;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  // Also update in Firestore (fire-and-forget)
+  saveToFirestore({ ...updates, timestamp });
+};
+
+/**
+ * Get the latest in-progress game (if any)
+ */
+export const getInProgressGame = () => {
+  const history = getLocalHistory();
+  return history.find(g => g.status === 'in-progress') || null;
 };
 
 /**
@@ -70,12 +95,10 @@ export const toggleInsignificant = (timestamp) => {
 };
 
 /**
- * Sync: Pull cloud data into localStorage
- * Call this on app startup to merge any games from other devices
+ * Sync: Pull cloud data into localStorage + push local to cloud
  */
 export const syncFromCloud = async () => {
   try {
-    // Timeout after 8 seconds
     const timeout = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('timeout')), 8000)
     );
@@ -124,7 +147,7 @@ export const syncFromCloud = async () => {
 };
 
 export const getPlayerStats = () => {
-  const history = getLocalHistory();
+  const history = getLocalHistory().filter(g => g.status === 'completed');
   const stats = {
     Ayush: { '1st': 0, '2nd': 0, '3rd': 0 },
     Mohit: { '1st': 0, '2nd': 0, '3rd': 0 },

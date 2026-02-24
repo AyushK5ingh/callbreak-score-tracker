@@ -1,23 +1,28 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, Save, Lock, AlertCircle, CheckCircle2, Trophy, Moon, Flag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateRoundScore, validateHands, getLeaderAndDiffs } from '../utils/gameLogic';
-import { saveGame } from '../utils/storage';
+import { saveGame, updateGame } from '../utils/storage';
 import { triggerHaptic, playSound } from '../utils/feedback';
 
-const GameSession = ({ onNavigate }) => {
-  const [players, setPlayers] = useState([
-    { name: 'Ayush', score: 0 },
-    { name: 'Harsh', score: 0 },
-    { name: 'Mohit', score: 0 },
-  ]);
-  const [rounds, setRounds] = useState([]);
+const GameSession = ({ onNavigate, resumeGame }) => {
+  // If resuming, hydrate from saved game; otherwise start fresh
+  const [players, setPlayers] = useState(
+    resumeGame ? resumeGame.totals : [
+      { name: 'Ayush', score: 0 },
+      { name: 'Harsh', score: 0 },
+      { name: 'Mohit', score: 0 },
+    ]
+  );
+  const [rounds, setRounds] = useState(resumeGame ? resumeGame.roundDetails : []);
   const [currentRound, setCurrentRound] = useState({ bids: { Ayush: '', Harsh: '', Mohit: '' }, hands: { Ayush: '', Harsh: '', Mohit: '' } });
   const [phase, setPhase] = useState('bid');
   const [popup, setPopup] = useState(null);
   const [timerActive, setTimerActive] = useState(false);
   const [negativeRoast, setNegativeRoast] = useState(null);
   const [gameFinished, setGameFinished] = useState(false);
+  // Stable timestamp for this game session
+  const gameTimestamp = useRef(resumeGame ? resumeGame.timestamp : new Date().toISOString());
 
   const playersWithDiffs = getLeaderAndDiffs(players);
   const leader = [...playersWithDiffs].sort((a, b) => b.score - a.score)[0];
@@ -130,11 +135,30 @@ const GameSession = ({ onNavigate }) => {
       scores: roundScores,
     };
 
-    setRounds([...rounds, roundDetail]);
+    const newRounds = [...rounds, roundDetail];
+    setRounds(newRounds);
     setPlayers(newPlayers);
     setCurrentRound({ bids: { Ayush: '', Harsh: '', Mohit: '' }, hands: { Ayush: '', Harsh: '', Mohit: '' } });
     setPhase('bid');
     setPopup(null);
+
+    // Auto-save game to history after every round
+    const gameData = {
+      timestamp: gameTimestamp.current,
+      players: newPlayers.map(p => p.name),
+      rounds: newRounds.length,
+      totals: newPlayers,
+      roundDetails: newRounds,
+      status: 'in-progress',
+    };
+
+    if (newRounds.length === 1 && !resumeGame) {
+      // First round of a new game — create entry
+      saveGame(gameData);
+    } else {
+      // Subsequent rounds or resumed game — update existing
+      updateGame(gameTimestamp.current, gameData);
+    }
 
     // Check if anyone just went negative
     const roastMessages = [
@@ -162,12 +186,14 @@ const GameSession = ({ onNavigate }) => {
     triggerHaptic('win');
     playSound('trophy');
 
-    saveGame({
-      timestamp: new Date().toISOString(),
+    // Mark game as completed
+    updateGame(gameTimestamp.current, {
+      timestamp: gameTimestamp.current,
       players: players.map(p => p.name),
       rounds: rounds.length,
       totals: players,
       roundDetails: rounds,
+      status: 'completed',
     });
     setGameFinished(true);
   };
