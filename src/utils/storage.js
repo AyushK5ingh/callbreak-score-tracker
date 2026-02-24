@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
 
 const STORAGE_KEY = 'callbreak_history';
 const FIRESTORE_COLLECTION = 'games';
@@ -34,10 +34,18 @@ const saveToFirestore = async (game) => {
 const getFirestoreHistory = async () => {
   try {
     const snapshot = await getDocs(collection(db, FIRESTORE_COLLECTION));
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(d => ({ _docId: d.id, ...d.data() }));
   } catch (err) {
     console.warn('Firestore read failed:', err.message);
     return [];
+  }
+};
+
+const deleteFromFirestore = async (docId) => {
+  try {
+    await deleteDoc(doc(db, FIRESTORE_COLLECTION, docId));
+  } catch (err) {
+    console.warn('Firestore delete failed:', err.message);
   }
 };
 
@@ -57,7 +65,6 @@ export const saveGame = (game) => {
 
 /**
  * Update an existing game in localStorage by timestamp
- * Used for auto-saving round-by-round progress
  */
 export const updateGame = (timestamp, updates) => {
   const history = getLocalHistory();
@@ -68,16 +75,16 @@ export const updateGame = (timestamp, updates) => {
     return g;
   });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  // Also update in Firestore (fire-and-forget)
+  // Also push update to Firestore
   saveToFirestore({ ...updates, timestamp });
 };
 
 /**
- * Get the latest in-progress game (if any)
+ * Get ALL in-progress games (for multiple continue buttons)
  */
-export const getInProgressGame = () => {
+export const getInProgressGames = () => {
   const history = getLocalHistory();
-  return history.find(g => g.status === 'in-progress') || null;
+  return history.filter(g => g.status === 'in-progress');
 };
 
 /**
@@ -95,7 +102,8 @@ export const toggleInsignificant = (timestamp) => {
 };
 
 /**
- * Sync: Pull cloud data into localStorage + push local to cloud
+ * Sync: Pull cloud data into localStorage, then CLEAR cloud
+ * Cloud is used as temporary transport only
  */
 export const syncFromCloud = async () => {
   try {
@@ -114,7 +122,9 @@ export const syncFromCloud = async () => {
       const localTimestamps = new Set(localHistory.map(g => g.timestamp));
       cloudGames.forEach(game => {
         if (!localTimestamps.has(game.timestamp)) {
-          localHistory.push(game);
+          // Remove internal _docId before saving locally
+          const { _docId, ...gameData } = game;
+          localHistory.push(gameData);
           newGames++;
         }
       });
@@ -124,19 +134,32 @@ export const syncFromCloud = async () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(localHistory));
         console.log(`☁️ Merged ${newGames} new games from cloud`);
       }
+
+      // --- Clear cloud after pulling ---
+      let deleted = 0;
+      for (const game of cloudGames) {
+        if (game._docId) {
+          await deleteFromFirestore(game._docId);
+          deleted++;
+        }
+      }
+      if (deleted > 0) {
+        console.log(`☁️ Cleared ${deleted} games from cloud (data is local now)`);
+      }
     }
 
-    // --- Push: send local-only games to cloud ---
-    const cloudTimestamps = new Set(cloudGames.map(g => g.timestamp));
+    // --- Push: send local-only games to cloud for other devices ---
     let pushed = 0;
     for (const game of localHistory) {
-      if (!cloudTimestamps.has(game.timestamp)) {
+      // Only push games that weren't already in cloud
+      const wasInCloud = cloudGames.some(cg => cg.timestamp === game.timestamp);
+      if (!wasInCloud) {
         await saveToFirestore(game);
         pushed++;
       }
     }
     if (pushed > 0) {
-      console.log(`☁️ Pushed ${pushed} local games to cloud`);
+      console.log(`☁️ Pushed ${pushed} local games to cloud for other devices`);
     }
 
     return { synced: true, count: newGames };

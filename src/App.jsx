@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import HomeView from './components/HomeView';
 import GameSession from './components/GameSession';
 import HistoryView from './components/HistoryView';
-import { syncFromCloud, getInProgressGame } from './utils/storage';
+import { syncFromCloud } from './utils/storage';
 
 function App() {
   const [view, setView] = useState('home');
