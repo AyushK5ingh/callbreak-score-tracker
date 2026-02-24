@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 const STORAGE_KEY = 'callbreak_history';
 const FIRESTORE_COLLECTION = 'games';
@@ -21,23 +21,23 @@ const saveLocal = (game) => {
 
 const saveToFirestore = async (game) => {
   try {
-    await addDoc(collection(db, FIRESTORE_COLLECTION), {
+    const docRef = await addDoc(collection(db, FIRESTORE_COLLECTION), {
       ...game,
       createdAt: new Date().toISOString(),
     });
+    console.log('☁️ Saved to Firestore:', docRef.id);
   } catch (err) {
-    console.warn('Firestore save queued (offline):', err.message);
-    // Firestore with persistence will auto-sync when back online
+    console.warn('Firestore save failed (will retry when online):', err.message);
   }
 };
 
 const getFirestoreHistory = async () => {
   try {
-    const q = query(collection(db, FIRESTORE_COLLECTION), orderBy('timestamp', 'desc'));
-    const snapshot = await getDocs(q);
+    // Simple getDocs without orderBy — avoids needing a Firestore index
+    const snapshot = await getDocs(collection(db, FIRESTORE_COLLECTION));
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
-    console.warn('Firestore read failed (offline):', err.message);
+    console.warn('Firestore read failed:', err.message);
     return [];
   }
 };
@@ -45,7 +45,6 @@ const getFirestoreHistory = async () => {
 // ─── Public API (dual-write) ────────────────────────────────────
 
 export const getHistory = () => {
-  // Immediate return from localStorage (fast, offline-first)
   return getLocalHistory();
 };
 
@@ -76,13 +75,15 @@ export const toggleInsignificant = (timestamp) => {
  */
 export const syncFromCloud = async () => {
   try {
-    // Timeout after 5 seconds to avoid hanging
+    // Timeout after 8 seconds
     const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('timeout')), 5000)
+      setTimeout(() => reject(new Error('timeout')), 8000)
     );
     const cloudGames = await Promise.race([getFirestoreHistory(), timeout]);
     
-    // Even if cloud is empty, we connected successfully
+    console.log(`☁️ Cloud returned ${cloudGames.length} games`);
+
+    // Connected successfully — even if empty
     if (cloudGames.length === 0) return { synced: true, count: 0 };
 
     const localHistory = getLocalHistory();
@@ -101,6 +102,20 @@ export const syncFromCloud = async () => {
       // Sort by timestamp descending
       localHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(localHistory));
+      console.log(`☁️ Merged ${newGames} new games from cloud`);
+    }
+
+    // Also push any local-only games to cloud
+    const cloudTimestamps = new Set(cloudGames.map(g => g.timestamp));
+    let pushed = 0;
+    for (const game of localHistory) {
+      if (!cloudTimestamps.has(game.timestamp)) {
+        await saveToFirestore(game);
+        pushed++;
+      }
+    }
+    if (pushed > 0) {
+      console.log(`☁️ Pushed ${pushed} local games to cloud`);
     }
 
     return { synced: true, count: newGames };
