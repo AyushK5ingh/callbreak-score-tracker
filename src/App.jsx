@@ -5,14 +5,23 @@ import HistoryView from './components/HistoryView';
 import { syncFromCloud } from './utils/storage';
 
 function App() {
-  const [view, setView] = useState('home'); // home, game, history
+  const [view, setView] = useState('home');
+  const [syncStatus, setSyncStatus] = useState('syncing'); // 'syncing' | 'synced' | 'offline'
 
   // Sync cloud data on app startup
   useEffect(() => {
+    setSyncStatus('syncing');
     syncFromCloud().then(result => {
-      if (result.synced && result.count > 0) {
-        console.log(`☁️ Synced ${result.count} games from cloud`);
+      if (result.synced) {
+        setSyncStatus('synced');
+        if (result.count > 0) {
+          console.log(`☁️ Synced ${result.count} games from cloud`);
+        }
+      } else {
+        setSyncStatus('offline');
       }
+    }).catch(() => {
+      setSyncStatus('offline');
     });
   }, []);
 
@@ -20,7 +29,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-dark-900 text-white font-sans selection:bg-amber-500/30">
-      {view === 'home' && <HomeView onNavigate={navigateTo} />}
+      {view === 'home' && <HomeView onNavigate={navigateTo} syncStatus={syncStatus} />}
       {view === 'game' && <GameSession onNavigate={navigateTo} />}
       {view === 'history' && <HistoryView onNavigate={navigateTo} />}
     </div>
@@ -28,4 +37,3 @@ function App() {
 }
 
 export default App;
-

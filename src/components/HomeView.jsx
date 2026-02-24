@@ -1,8 +1,15 @@
 import React from 'react';
-import { Play, History, Award, ChevronRight, Settings } from 'lucide-react';
+import { Play, History, Award, ChevronRight, Settings, Cloud, CloudOff, Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const HomeView = ({ onNavigate }) => {
+const HomeView = ({ onNavigate, syncStatus }) => {
+  const syncConfig = {
+    syncing: { dot: 'bg-amber-500 animate-pulse', icon: <Loader className="w-3 h-3 text-amber-400 animate-spin" />, text: 'Syncing...', color: 'text-amber-500' },
+    synced: { dot: 'bg-green-500', icon: <Cloud className="w-3 h-3 text-green-400" />, text: 'Cloud synced', color: 'text-green-500' },
+    offline: { dot: 'bg-rose-500 animate-pulse', icon: <CloudOff className="w-3 h-3 text-rose-400" />, text: 'Offline mode', color: 'text-rose-400' },
+  };
+  const sync = syncConfig[syncStatus] || syncConfig.offline;
+
   return (
     <div className="flex flex-col min-h-screen bg-dark-900 px-6 py-12 font-outfit">
       {/* Top bar */}
@@ -59,11 +66,12 @@ const HomeView = ({ onNavigate }) => {
         </motion.button>
       </div>
 
-      {/* Bottom info */}
+      {/* Bottom sync status */}
       <div className="mt-auto text-center">
         <div className="inline-flex items-center space-x-2 px-4 py-2 bg-dark-800/50 rounded-full border border-white/5">
-          <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Offline Edition v2.0</span>
+          {sync.icon}
+          <div className={`w-1.5 h-1.5 rounded-full ${sync.dot}`} />
+          <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${sync.color}`}>{sync.text}</span>
         </div>
       </div>
     </div>
