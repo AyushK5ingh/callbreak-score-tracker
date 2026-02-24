@@ -83,29 +83,27 @@ export const syncFromCloud = async () => {
     
     console.log(`☁️ Cloud returned ${cloudGames.length} games`);
 
-    // Connected successfully — even if empty
-    if (cloudGames.length === 0) return { synced: true, count: 0 };
-
     const localHistory = getLocalHistory();
-    const localTimestamps = new Set(localHistory.map(g => g.timestamp));
 
-    // Merge: add cloud games not already in local
+    // --- Pull: merge cloud games into local ---
     let newGames = 0;
-    cloudGames.forEach(game => {
-      if (!localTimestamps.has(game.timestamp)) {
-        localHistory.push(game);
-        newGames++;
-      }
-    });
+    if (cloudGames.length > 0) {
+      const localTimestamps = new Set(localHistory.map(g => g.timestamp));
+      cloudGames.forEach(game => {
+        if (!localTimestamps.has(game.timestamp)) {
+          localHistory.push(game);
+          newGames++;
+        }
+      });
 
-    if (newGames > 0) {
-      // Sort by timestamp descending
-      localHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(localHistory));
-      console.log(`☁️ Merged ${newGames} new games from cloud`);
+      if (newGames > 0) {
+        localHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(localHistory));
+        console.log(`☁️ Merged ${newGames} new games from cloud`);
+      }
     }
 
-    // Also push any local-only games to cloud
+    // --- Push: send local-only games to cloud ---
     const cloudTimestamps = new Set(cloudGames.map(g => g.timestamp));
     let pushed = 0;
     for (const game of localHistory) {
