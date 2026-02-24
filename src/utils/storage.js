@@ -76,8 +76,14 @@ export const toggleInsignificant = (timestamp) => {
  */
 export const syncFromCloud = async () => {
   try {
-    const cloudGames = await getFirestoreHistory();
-    if (cloudGames.length === 0) return { synced: false, count: 0 };
+    // Timeout after 5 seconds to avoid hanging
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('timeout')), 5000)
+    );
+    const cloudGames = await Promise.race([getFirestoreHistory(), timeout]);
+    
+    // Even if cloud is empty, we connected successfully
+    if (cloudGames.length === 0) return { synced: true, count: 0 };
 
     const localHistory = getLocalHistory();
     const localTimestamps = new Set(localHistory.map(g => g.timestamp));
