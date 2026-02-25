@@ -84,6 +84,12 @@ const GameSession = ({ onNavigate, resumeGame }) => {
       }, 1000);
     } else if (popup && popup.countdown === 0) {
       setTimerActive(false);
+      // Auto-confirm based on popup type
+      if (popup.type === 'bid') {
+        confirmBids();
+      } else if (popup.type === 'hand-warning') {
+        processRound();
+      }
     }
     return () => clearInterval(interval);
   }, [timerActive, popup]);
@@ -515,6 +521,13 @@ const GameSession = ({ onNavigate, resumeGame }) => {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white text-dark-900 rounded-[40px] p-8 max-w-sm w-full text-center relative overflow-hidden"
             >
+              {/* Auto-lock progress bar */}
+              {popup.countdown !== undefined && (
+                <div 
+                  className={`absolute top-0 left-0 h-1.5 transition-all duration-1000 ease-linear ${popup.type === 'bid' ? 'bg-primary-500' : 'bg-rose-500'}`}
+                  style={{ width: `${(popup.countdown / 3) * 100}%` }}
+                />
+              )}
               <div className="w-20 h-20 bg-dark-900/5 rounded-full flex items-center justify-center mx-auto mb-6">
                 {popup.type === 'bid' ? <Lock className="w-10 h-10 text-dark-900" /> : <AlertCircle className="w-10 h-10 text-rose-500" />}
               </div>
