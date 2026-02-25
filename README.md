@@ -1,35 +1,42 @@
 # 🃏 Call Break Score Tracker (Premium Edition)
 
-A professional, high-performance offline score tracking application built specifically for Ayush, Harsh, and Mohit. Features a premium dark aesthetic with real-time analytics and mobile-first optimization.
+A professional, high-performance score tracking application built specifically for Ayush, Harsh, and Mohit. Features a premium design system with interactive themes, real-time cloud sync, and advanced game analytics.
 
-![Version](https://img.shields.io/badge/version-2.0.0-emerald)
+![Version](https://img.shields.io/badge/version-3.0.0-emerald)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Android-blue)
-![Offline](https://img.shields.io/badge/offline-Ready-success)
+![Cloud](https://img.shields.io/badge/cloud-Firebase%20Sync-orange)
 
 ## ✨ Premium Features
 
-### 📊 Professional Scoreboard
-- **Round-by-Round Breakdown**: Full transparency for every bid and hand made.
-- **Smart Totals**: Real-time automatic summing of scores across all rounds.
-- **Ordered Consistency**: Fixed player sorting (**Ayush • Harsh • Mohit**) for muscle-memory data entry.
+### 🎨 Interactive Themes
+Switch between four distinct visual and auditory personalities:
+- **Emerald Aurora**: The classic premium look with smooth green gradients.
+- **Casino Night 🎲**: Deep forest green "felt" aesthetic with red/gold accents.
+- **Cyberpunk ⚡**: High-contrast neon purple/cyan on a black background.
+- **Classic Deck 🃏**: Tactile paper texture with leather brown accents.
+*All themes include custom audio oscillator profiles for a unique sound experience.*
 
-### 👑 Leaderboard UX
-- **Live Leader Tracking**: Top scorer automatically gets the "Leader" badge and trophy icon.
-- **Point Gaps**: Competitive badges show exactly how many points players are behind the leader.
-- **Locked Call Visibility**: Bids remain visible at the top during gameplay for quick reference.
+### ✍️ Advanced Scoring & Correction
+- **Edit Previous Rounds**: Made a mistake? Click the lock icon on any round to correct the tricks made.
+- **Live Recalculation**: The leaderboard and all subsequent rounds update instantly upon saving edits.
+- **Smart Validation**: Bid locking countdown and 17-hand interlocking to prevent data entry errors.
 
-### 🛡️ Safety & Validation
-- **Smart Popups**: Clean, "Deliveroo-inspired" action sheets for critical transitions.
-- **Bid Locking**: 3-second countdown to prevent accidental bid changes.
-- **17-Hand Interlock**: Validation ensures total hands sum to 17, with a safety confirmation delay.
+### 📊 Professional Analytics
+- **Live Nicknames**: Automated badges like "Aggressor" or "Safeboy" based on playing style.
+- **Hall of Fame**: Tracking most wins, highest single-round scores, and comeback records.
+- **Trend Charts**: Visual match progression graphs for every game.
+
+### ☁️ Cloud Sync & Persistence
+- **Firebase Backend**: Real-time backup of every round.
+- **Multi-Device Support**: Start on one device, continue on another. 
 
 ## 🚀 Tech Stack
 - **Frontend**: React 19 + Vite (SWC)
-- **Styling**: Tailwind CSS v4 (Custom Dark Theme)
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
+- **Styling**: Tailwind CSS v4 (Custom Theme Engine)
+- **Database**: Firebase Firestore (Real-time Sync)
+- **Storage**: LocalStorage + Cloud Hybrid
+- **Sensory**: Web Audio API (Oscillator Synthesis) + Haptic Feedback
 - **Mobile Foundation**: Capacitor v8
-- **Storage**: LocalStorage (100% Offline)
 
 ## 🛠️ Local Development
 
@@ -57,14 +64,12 @@ The app is pre-configured with Capacitor for Android.
 
 1. **Sync Assets**:
    ```bash
-   npx cap sync android
+   npx cap sync
    ```
 2. **Open in Android Studio**:
    ```bash
    npx cap open android
    ```
-3. **Build APK**:
-   Go to **Build > Build Bundle(s) / APK(s) > Build APK(s)** in Android Studio.
 
 ## 📄 License
 Created for personal use by Ayush & Squad.
