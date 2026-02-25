@@ -43,7 +43,7 @@ Switch between four distinct visual and auditory personalities:
 ### 1. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/AyushK5ingh/callbreak.git
+git clone https://github.com/AyushK5ingh/callbreak-score-tracker.git
 
 # Install dependencies
 npm install
