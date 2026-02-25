@@ -4,49 +4,101 @@
   --font-sans: "Inter", "sans-serif";
   --font-outfit: "Outfit", "sans-serif";
   
-  --color-dark-900: #0c0c0c;
-  --color-dark-800: #161616;
-  --color-dark-700: #262626;
+  --color-dark-900: var(--bg-900);
+  --color-dark-800: var(--bg-800);
+  --color-dark-700: var(--bg-700);
   
-  --color-primary-500: #D4A017;
-  --color-primary-600: #B8860B;
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-accent: var(--accent);
+}
+
+:root {
+  --bg-900: #0c0c0c;
+  --bg-800: #161616;
+  --bg-700: #262626;
+  --primary-500: #D4A017;
+  --primary-600: #B8860B;
+  --accent: #059669;
+  --text-base: #e2e8f0;
+  --text-muted: #64748b;
+}
+
+[data-theme="casino"] {
+  --bg-900: #064E3B;
+  --bg-800: #065F46;
+  --bg-700: #047857;
+  --primary-500: #FFD700;
+  --primary-600: #B8860B;
+  --accent: #DC2626;
+  --text-base: #ecfdf5;
+  --text-muted: #6ee7b7;
+}
+
+[data-theme="cyberpunk"] {
+  --bg-900: #030014;
+  --bg-800: #0B0121;
+  --bg-700: #1a0b3f;
+  --primary-500: #CF06F0;
+  --primary-600: #7C3AED;
+  --accent: #06B6D4;
+  --text-base: #fdf4ff;
+  --text-muted: #d8b4fe;
+}
+
+[data-theme="classic"] {
+  --bg-900: #F5F5DC;
+  --bg-800: #E5E7EB;
+  --bg-700: #D1D5DB;
+  --primary-500: #92400E;
+  --primary-600: #78350F;
+  --accent: #166534;
+  --text-base: #1e293b;
+  --text-muted: #475569;
 }
 
 @layer base {
   body {
     @apply bg-dark-900 text-slate-200 font-sans antialiased;
+    color: var(--text-base);
     background-image: 
-      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(212, 160, 23, 0.06), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(212, 160, 23, 0.04), transparent);
+      radial-gradient(ellipse 80% 50% at 20% 80%, color-mix(in srgb, var(--primary-500) 6%, transparent), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 20%, color-mix(in srgb, var(--primary-500) 4%, transparent), transparent);
     background-attachment: fixed;
     animation: aurora 20s ease-in-out infinite alternate;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
 }
 
 @keyframes aurora {
   0% {
     background-image:
-      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(212, 160, 23, 0.06), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(212, 160, 23, 0.04), transparent);
+      radial-gradient(ellipse 80% 50% at 20% 80%, color-mix(in srgb, var(--primary-500) 6%, transparent), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 20%, color-mix(in srgb, var(--primary-500) 4%, transparent), transparent);
   }
   50% {
     background-image:
-      radial-gradient(ellipse 70% 60% at 50% 60%, rgba(212, 160, 23, 0.08), transparent),
-      radial-gradient(ellipse 80% 30% at 30% 30%, rgba(212, 160, 23, 0.05), transparent);
+      radial-gradient(ellipse 70% 60% at 50% 60%, color-mix(in srgb, var(--primary-500) 8%, transparent), transparent),
+      radial-gradient(ellipse 80% 30% at 30% 30%, color-mix(in srgb, var(--primary-500) 5%, transparent), transparent);
   }
   100% {
     background-image:
-      radial-gradient(ellipse 60% 50% at 70% 70%, rgba(212, 160, 23, 0.06), transparent),
-      radial-gradient(ellipse 90% 40% at 10% 40%, rgba(212, 160, 23, 0.04), transparent);
+      radial-gradient(ellipse 60% 50% at 70% 70%, color-mix(in srgb, var(--primary-500) 6%, transparent), transparent),
+      radial-gradient(ellipse 90% 40% at 10% 40%, color-mix(in srgb, var(--primary-500) 4%, transparent), transparent);
   }
 }
 
 @layer components {
   .card {
     @apply bg-dark-800 border border-white/5 rounded-2xl p-6 shadow-xl;
+    border-color: color-mix(in srgb, var(--text-base) 5%, transparent);
   }
   .btn-primary {
     @apply bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-xl transition-all active:scale-95 shadow-lg shadow-primary-500/20;
+    color: var(--bg-900); /* Some contrast improvement for light themes */
+  }
+  [data-theme="classic"] .btn-primary {
+    color: white;
   }
 }
 

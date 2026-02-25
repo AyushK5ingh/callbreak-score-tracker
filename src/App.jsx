@@ -8,6 +8,13 @@ function App() {
   const [view, setView] = useState('home');
   const [syncStatus, setSyncStatus] = useState('syncing');
   const [resumeGame, setResumeGame] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem('cb-theme') || 'default');
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('cb-theme', theme);
+  }, [theme]);
 
   // Sync cloud data on app startup
   useEffect(() => {
@@ -37,8 +44,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-dark-900 text-white font-sans selection:bg-amber-500/30">
-      {view === 'home' && <HomeView onNavigate={navigateTo} syncStatus={syncStatus} />}
-      {view === 'game' && <GameSession key={resumeGame?.timestamp || 'new'} onNavigate={navigateTo} resumeGame={resumeGame} />}
+      {view === 'home' && <HomeView onNavigate={navigateTo} syncStatus={syncStatus} theme={theme} setTheme={setTheme} />}
+      {view === 'game' && <GameSession key={resumeGame?.timestamp || 'new'} onNavigate={navigateTo} resumeGame={resumeGame} currentTheme={theme} />}
       {view === 'history' && <HistoryView onNavigate={navigateTo} />}
     </div>
   );

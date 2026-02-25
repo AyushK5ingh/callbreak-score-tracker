@@ -1,9 +1,10 @@
 import React from 'react';
-import { Play, History, Award, ChevronRight, Settings, Cloud, CloudOff, Loader, RotateCcw } from 'lucide-react';
+import { Play, History, Award, ChevronRight, Cloud, CloudOff, Loader, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getInProgressGames } from '../utils/storage';
+import { THEMES } from '../utils/themes';
 
-const HomeView = ({ onNavigate, syncStatus }) => {
+const HomeView = ({ onNavigate, syncStatus, theme, setTheme }) => {
   const inProgressGames = getInProgressGames();
 
   const syncConfig = {
@@ -20,13 +21,11 @@ const HomeView = ({ onNavigate, syncStatus }) => {
         <div className="w-10 h-10 bg-dark-800 rounded-full flex items-center justify-center border border-white/5">
            <Award className="w-5 h-5 text-primary-500" />
         </div>
-        <button className="w-10 h-10 bg-dark-800 rounded-full flex items-center justify-center border border-white/5 text-slate-400">
-           <Settings className="w-5 h-5" />
-        </button>
+        <div className="w-10 h-10" /> {/* Placeholder */}
       </div>
 
       {/* Main Title */}
-      <div className="mb-16">
+      <div className="mb-16 text-center">
         <h1 className="text-5xl font-black text-white tracking-tight leading-tight mb-4">
           Score<br /><span className="text-primary-500">Tracker</span>
         </h1>
@@ -74,19 +73,41 @@ const HomeView = ({ onNavigate, syncStatus }) => {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => onNavigate('history')}
-          className="w-full flex items-center justify-between p-6 bg-dark-800 border border-white/5 rounded-[28px] shadow-xl group"
+          className="w-full flex items-center justify-between p-6 bg-dark-800 border border-white/5 rounded-[28px] shadow-xl group transition-all"
         >
           <div className="flex items-center space-x-5">
             <div className="w-14 h-14 bg-dark-700 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-white transition-colors">
               <History className="w-7 h-7" />
             </div>
-            <div>
+            <div className="text-left">
               <h2 className="text-xl font-bold text-white mb-1">History</h2>
               <p className="text-slate-500 text-sm font-medium">Recent matches</p>
             </div>
           </div>
           <ChevronRight className="w-6 h-6 text-dark-700" />
         </motion.button>
+      </div>
+
+      {/* Theme Switcher */}
+      <div className="mb-12">
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 text-center">Visual Theme</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {Object.values(THEMES).map((t) => (
+            <motion.button
+              key={t.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setTheme(t.id)}
+              className={`flex items-center space-x-3 p-4 rounded-2xl border transition-all ${
+                theme === t.id 
+                  ? 'bg-primary-500/10 border-primary-500 text-white shadow-lg shadow-primary-500/10' 
+                  : 'bg-dark-800 border-white/5 text-slate-400'
+              }`}
+            >
+              <span className="text-lg">{t.emoji}</span>
+              <span className="text-xs font-bold leading-none">{t.name}</span>
+            </motion.button>
+          ))}
+        </div>
       </div>
 
       {/* Bottom sync status */}

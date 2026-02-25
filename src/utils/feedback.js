@@ -17,6 +17,8 @@ export const triggerHaptic = (type = 'light') => {
   }
 };
 
+import { getTheme } from './themes';
+
 // Sound Effects — Web Audio API (no external files needed)
 const audioCtx = typeof window !== 'undefined' ? new (window.AudioContext || window.webkitAudioContext)() : null;
 
@@ -37,30 +39,34 @@ const playTone = (frequency, duration, type = 'sine', gain = 0.3) => {
   osc.stop(audioCtx.currentTime + duration);
 };
 
-export const playSound = (type) => {
+export const playSound = (type, themeId = 'default') => {
+  const theme = getTheme(themeId);
+  const osc = theme.audio.oscillator;
+  const masterGain = theme.audio.gain;
+
   switch (type) {
     case 'click':
       // Short, satisfying click
-      playTone(800, 0.08, 'square', 0.15);
-      setTimeout(() => playTone(1200, 0.05, 'sine', 0.1), 30);
+      playTone(800, 0.08, osc, 0.15 * masterGain);
+      setTimeout(() => playTone(1200, 0.05, 'sine', 0.1 * masterGain), 30);
       break;
     case 'lock':
       // Deeper confirmation click
-      playTone(600, 0.1, 'triangle', 0.2);
-      setTimeout(() => playTone(900, 0.08, 'sine', 0.15), 60);
+      playTone(600, 0.1, osc === 'sine' ? 'triangle' : osc, 0.2 * masterGain);
+      setTimeout(() => playTone(900, 0.08, 'sine', 0.15 * masterGain), 60);
       break;
     case 'trophy':
       // Celebratory ascending arpeggio
-      playTone(523, 0.15, 'sine', 0.2);       // C5
-      setTimeout(() => playTone(659, 0.15, 'sine', 0.2), 120);  // E5
-      setTimeout(() => playTone(784, 0.15, 'sine', 0.2), 240);  // G5
-      setTimeout(() => playTone(1047, 0.3, 'sine', 0.25), 360); // C6
+      playTone(523, 0.15, 'sine', 0.2 * masterGain);       // C5
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.2 * masterGain), 120);  // E5
+      setTimeout(() => playTone(784, 0.15, 'sine', 0.2 * masterGain), 240);  // G5
+      setTimeout(() => playTone(1047, 0.3, 'sine', 0.25 * masterGain), 360); // C6
       break;
     case 'error':
       // Low buzzy warning
-      playTone(200, 0.2, 'sawtooth', 0.1);
+      playTone(200, 0.2, 'sawtooth', 0.1 * masterGain);
       break;
     default:
-      playTone(600, 0.05, 'sine', 0.1);
+      playTone(600, 0.05, osc, 0.1 * masterGain);
   }
 };

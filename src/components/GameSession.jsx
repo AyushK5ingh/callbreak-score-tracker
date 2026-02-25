@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft, Save, Lock, AlertCircle, CheckCircle2, Trophy, Moon, Flag } from 'lucide-react';
+import { ArrowLeft, Save, Lock, AlertCircle, CheckCircle2, Trophy, Moon, Flag, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateRoundScore, validateHands, getLeaderAndDiffs } from '../utils/gameLogic';
 import { saveGame, updateGame } from '../utils/storage';
@@ -14,7 +14,7 @@ const NicknameBadge = ({ nick }) => {
   );
 };
 
-const GameSession = ({ onNavigate, resumeGame }) => {
+const GameSession = ({ onNavigate, resumeGame, currentTheme }) => {
   // If resuming, hydrate from saved game; otherwise start fresh
   const [players, setPlayers] = useState(
     resumeGame ? resumeGame.totals : [
@@ -31,8 +31,12 @@ const GameSession = ({ onNavigate, resumeGame }) => {
   const [negativeRoast, setNegativeRoast] = useState(null);
   const [gameFinished, setGameFinished] = useState(false);
   const [dealerIndex, setDealerIndex] = useState(rounds.length % 3);
+  const [editingRoundIndex, setEditingRoundIndex] = useState(null);
   // Stable timestamp for this game session
   const gameTimestamp = useRef(resumeGame ? resumeGame.timestamp : new Date().toISOString());
+
+  // Sound wrapping
+  const playSfx = (type) => playSound(type, currentTheme);
 
   const playersWithDiffs = getLeaderAndDiffs(players);
   const leader = [...playersWithDiffs].sort((a, b) => b.score - a.score)[0];
@@ -104,7 +108,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
 
   const startBidLockIn = () => {
     if (Object.values(currentRound.bids).some(v => v === '')) return;
-    playSound('click');
+    playSfx('click');
     setPopup({ type: 'bid', countdown: 3 });
     setTimerActive(true);
   };
@@ -112,7 +116,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
   const startHandLockIn = () => {
     if (Object.values(currentRound.hands).some(v => v === '')) return;
     if (!validateHands(Object.values(currentRound.hands))) {
-      playSound('error');
+      playSfx('error');
       triggerHaptic('lock');
       setPopup({ type: 'hand-warning' });
     } else {
@@ -122,14 +126,51 @@ const GameSession = ({ onNavigate, resumeGame }) => {
 
   const confirmBids = () => {
     triggerHaptic('lock');
-    playSound('lock');
+    playSfx('lock');
     setPopup(null);
     setPhase('play');
   };
 
+  const saveEditedRound = (index) => {
+    const editedRound = rounds[index];
+    const newScores = {
+      Ayush: calculateRoundScore(editedRound.bids.Ayush, editedRound.hands.Ayush),
+      Harsh: calculateRoundScore(editedRound.bids.Harsh, editedRound.hands.Harsh),
+      Mohit: calculateRoundScore(editedRound.bids.Mohit, editedRound.hands.Mohit),
+    };
+    
+    const newRounds = [...rounds];
+    newRounds[index] = { ...editedRound, scores: newScores };
+    
+    // Recalculate absolute totals for players
+    const newPlayers = [
+      { name: 'Ayush', score: 0 },
+      { name: 'Harsh', score: 0 },
+      { name: 'Mohit', score: 0 },
+    ].map(p => ({
+      ...p,
+      score: newRounds.reduce((sum, r) => sum + (r.scores[p.name] || 0), 0)
+    }));
+
+    setRounds(newRounds);
+    setPlayers(newPlayers);
+    setEditingRoundIndex(null);
+    triggerHaptic('lock');
+    playSfx('click');
+
+    updateGame(gameTimestamp.current, {
+      timestamp: gameTimestamp.current,
+      players: newPlayers.map(p => p.name),
+      rounds: newRounds.length,
+      totals: newPlayers,
+      roundDetails: newRounds,
+      status: gameFinished ? 'completed' : 'in-progress',
+    });
+  };
+
   const processRound = () => {
     triggerHaptic('round');
-    playSound('click');
+    playSfx('click');
 
     const roundScores = {
       Ayush: calculateRoundScore(currentRound.bids.Ayush, currentRound.hands.Ayush),
@@ -189,7 +230,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
     if (justWentNegative.length > 0) {
       const victim = justWentNegative[0];
       const msg = roastMessages[Math.floor(Math.random() * roastMessages.length)];
-      playSound('error');
+      playSfx('error');
       triggerHaptic('win');
       setNegativeRoast({ name: victim.name, score: victim.score, message: msg });
       setTimeout(() => setNegativeRoast(null), 2500);
@@ -198,7 +239,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
 
   const finishGame = () => {
     triggerHaptic('win');
-    playSound('trophy');
+    playSfx('trophy');
 
     // Mark game as completed
     updateGame(gameTimestamp.current, {
@@ -411,16 +452,64 @@ const GameSession = ({ onNavigate, resumeGame }) => {
             {rounds.length > 0 ? (
               <div className="divide-y divide-white/5">
                 {rounds.map((r, i) => (
-                  <div key={i} className="p-4 grid grid-cols-[30px_1fr_1fr_1fr_30px] gap-2 items-center hover:bg-white/[0.02]">
-                    <span className="text-xs font-bold text-slate-600">{(i + 1).toString().padStart(2, '0')}</span>
-                    {['Ayush', 'Harsh', 'Mohit'].map(name => (
-                      <div key={name} className="text-center">
-                        <span className={`text-base font-bold ${r.scores[name] >= 0 ? 'text-slate-400' : 'text-rose-400'}`}>{r.scores[name]}</span>
+                  <div key={i} className={`p-4 transition-all ${editingRoundIndex === i ? 'bg-primary-500/10' : 'hover:bg-white/[0.02]'}`}>
+                    {editingRoundIndex === i ? (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-[10px] font-black text-primary-500 uppercase">Editing Round {(i + 1)}</span>
+                          <button onClick={() => saveEditedRound(i)} className="bg-primary-500 text-dark-900 text-[10px] font-black px-3 py-1 rounded-full">SAVE</button>
+                        </div>
+                        <div className="grid grid-cols-[30px_1fr_1fr_1fr_30px] gap-2 items-center">
+                          <span className="w-5" />
+                          {['Ayush', 'Harsh', 'Mohit'].map(name => (
+                            <div key={name} className="space-y-2">
+                              <div className="relative">
+                                <div className="w-full bg-dark-900/40 border border-white/5 rounded-lg p-2 text-center text-sm font-bold text-slate-500 opacity-60">
+                                  {r.bids[name]}
+                                </div>
+                                <span className="absolute -top-1.5 left-1 translate-x-1 bg-dark-800 text-[5px] font-black text-slate-600 px-1 rounded uppercase tracking-widest">Call Locked</span>
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  pattern="\d*"
+                                  inputMode="numeric"
+                                  value={r.hands[name]}
+                                  onChange={(e) => {
+                                    const newRounds = [...rounds];
+                                    newRounds[i].hands[name] = e.target.value;
+                                    setRounds(newRounds);
+                                  }}
+                                  className="w-full bg-dark-900 border border-white/10 rounded-lg p-2 text-center text-sm font-bold text-white outline-none"
+                                />
+                                <span className="absolute -top-1.5 left-1 translate-x-1 bg-dark-800 text-[5px] font-black text-slate-500 px-1 rounded uppercase">Made</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                    <div className="flex justify-end">
-                      <Lock className="w-3 h-3 text-slate-700" />
-                    </div>
+                    ) : (
+                      <div className="grid grid-cols-[30px_1fr_1fr_1fr_30px] gap-2 items-center">
+                        <span className="text-xs font-bold text-slate-600">{(i + 1).toString().padStart(2, '0')}</span>
+                        {['Ayush', 'Harsh', 'Mohit'].map(name => (
+                          <div key={name} className="text-center">
+                            <span className={`text-base font-bold ${r.scores[name] >= 0 ? 'text-slate-400' : 'text-rose-400'}`}>{r.scores[name]}</span>
+                            <div className="text-[8px] font-medium text-slate-600 mt-0.5">{r.bids[name]} <ChevronRight className="w-1.5 h-1.5 inline mx-0.5 opacity-30" /> {r.hands[name]}</div>
+                          </div>
+                        ))}
+                        <div className="flex justify-end">
+                          <button 
+                            onClick={() => {
+                              setEditingRoundIndex(i);
+                              triggerHaptic('light');
+                            }}
+                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/5 text-slate-700 hover:text-primary-500 transition-colors"
+                          >
+                             <Lock className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

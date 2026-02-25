@@ -102,7 +102,7 @@ const HistoryView = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 text-slate-200 px-6 py-12 font-outfit">
+    <div className="min-h-screen bg-dark-900 px-6 py-12 font-outfit">
       {/* Navbar */}
       <div className="flex items-center justify-between mb-12">
         <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-dark-800 border border-white/5 rounded-full flex items-center justify-center text-slate-400">
@@ -115,15 +115,15 @@ const HistoryView = ({ onNavigate }) => {
       {/* Hall of Fame Highlights */}
       <div className="mb-12">
         <div className="flex items-center space-x-3 mb-6">
-          <Trophy className="w-4 h-4 text-amber-500" />
+          <Trophy className="w-4 h-4 text-primary-500" />
           <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Hall of Fame</h3>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-2 opacity-10"><Trophy className="w-8 h-8 text-amber-500" /></div>
-            <p className="text-[7px] font-black text-amber-500 uppercase tracking-widest mb-1">Most Wins</p>
+          <div className="bg-gradient-to-br from-primary-500/10 to-transparent border border-primary-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 opacity-10"><Trophy className="w-8 h-8 text-primary-500" /></div>
+            <p className="text-[7px] font-black text-primary-500 uppercase tracking-widest mb-1">Most Wins</p>
             <p className="text-lg font-black text-white">{mostWins}</p>
-            <p className="text-[10px] font-bold text-amber-500/60">{lifetime[mostWins].wins} Titles</p>
+            <p className="text-[10px] font-bold text-primary-500/60">{lifetime[mostWins].wins} Titles</p>
           </div>
           <div className="bg-gradient-to-br from-primary-500/10 to-transparent border border-primary-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
              <div className="absolute top-0 right-0 p-2 opacity-10"><Hash className="w-8 h-8 text-primary-500" /></div>
@@ -131,11 +131,11 @@ const HistoryView = ({ onNavigate }) => {
             <p className="text-lg font-black text-white">{maxRound}</p>
             <p className="text-[10px] font-bold text-primary-500/60">{lifetime[maxRound].highRound} Points</p>
           </div>
-          <div className="bg-gradient-to-br from-rose-500/10 to-transparent border border-rose-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-2 opacity-10"><TrendingUp className="w-8 h-8 text-rose-500" /></div>
-            <p className="text-[7px] font-black text-rose-500 uppercase tracking-widest mb-1">Comebacks</p>
+          <div className="bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 p-4 rounded-[32px] text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 opacity-10"><TrendingUp className="w-8 h-8 text-accent" /></div>
+            <p className="text-[7px] font-black text-accent uppercase tracking-widest mb-1">Comebacks</p>
             <p className="text-lg font-black text-white">{mostComebacks}</p>
-            <p className="text-[10px] font-bold text-rose-500/60">{lifetime[mostComebacks].comebacks} King</p>
+            <p className="text-[10px] font-bold text-accent/60">{lifetime[mostComebacks].comebacks} King</p>
           </div>
         </div>
       </div>
@@ -248,15 +248,15 @@ const HistoryView = ({ onNavigate }) => {
                   {/* Comeback / Downfall tags */}
                   <div className="flex flex-wrap gap-2">
                     {analysis.comeback && (
-                      <div className="flex items-center space-x-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
-                        <TrendingUp className="w-3 h-3 text-amber-400" />
-                        <span className="text-[8px] font-black text-amber-400 uppercase">{analysis.comeback} — Comeback King 👑</span>
+                      <div className="flex items-center space-x-1 bg-primary-500/10 border border-primary-500/20 px-2 py-1 rounded-lg">
+                        <TrendingUp className="w-3 h-3 text-primary-500" />
+                        <span className="text-[8px] font-black text-primary-500 uppercase">{analysis.comeback} — Comeback King 👑</span>
                       </div>
                     )}
                     {analysis.downfall && (
-                      <div className="flex items-center space-x-1 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg">
-                        <TrendingDown className="w-3 h-3 text-rose-400" />
-                        <span className="text-[8px] font-black text-rose-400 uppercase">{analysis.downfall} — Downfall 📉</span>
+                      <div className="flex items-center space-x-1 bg-accent/10 border border-accent/20 px-2 py-1 rounded-lg">
+                        <TrendingDown className="w-3 h-3 text-accent" />
+                        <span className="text-[8px] font-black text-accent uppercase">{analysis.downfall} — Downfall 📉</span>
                       </div>
                     )}
                   </div>
