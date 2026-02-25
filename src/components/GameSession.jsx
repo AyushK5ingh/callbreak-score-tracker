@@ -97,8 +97,6 @@ const GameSession = ({ onNavigate, resumeGame }) => {
       // Auto-confirm based on popup type
       if (popup.type === 'bid') {
         confirmBids();
-      } else if (popup.type === 'hand-warning') {
-        processRound();
       }
     }
     return () => clearInterval(interval);
@@ -116,8 +114,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
     if (!validateHands(Object.values(currentRound.hands))) {
       playSound('error');
       triggerHaptic('lock');
-      setPopup({ type: 'hand-warning', countdown: 3 });
-      setTimerActive(true);
+      setPopup({ type: 'hand-warning' });
     } else {
       processRound();
     }
@@ -560,7 +557,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
                   onClick={popup.type === 'bid' ? confirmBids : processRound}
                   className="py-4 bg-dark-900 text-white rounded-2xl font-black text-lg disabled:opacity-50 transition-all active:scale-95"
                 >
-                  {popup.countdown > 0 ? `YES (${popup.countdown})` : 'CONFIRM YES'}
+                  {popup.countdown !== undefined ? (popup.countdown > 0 ? `YES (${popup.countdown})` : 'CONFIRM YES') : 'CONFIRM YES'}
                 </button>
                 <button
                   onClick={() => setPopup(null)}
