@@ -5,6 +5,15 @@ import { calculateRoundScore, validateHands, getLeaderAndDiffs } from '../utils/
 import { saveGame, updateGame } from '../utils/storage';
 import { triggerHaptic, playSound } from '../utils/feedback';
 
+const NicknameBadge = ({ nick }) => {
+  if (!nick) return null;
+  return (
+    <span className={`text-[7px] font-black uppercase tracking-wider ${nick.color}`}>
+      {nick.emoji} {nick.label}
+    </span>
+  );
+};
+
 const GameSession = ({ onNavigate, resumeGame }) => {
   // If resuming, hydrate from saved game; otherwise start fresh
   const [players, setPlayers] = useState(
@@ -21,6 +30,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
   const [timerActive, setTimerActive] = useState(false);
   const [negativeRoast, setNegativeRoast] = useState(null);
   const [gameFinished, setGameFinished] = useState(false);
+  const [dealerIndex, setDealerIndex] = useState(rounds.length % 3);
   // Stable timestamp for this game session
   const gameTimestamp = useRef(resumeGame ? resumeGame.timestamp : new Date().toISOString());
 
@@ -144,6 +154,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
     const newRounds = [...rounds, roundDetail];
     setRounds(newRounds);
     setPlayers(newPlayers);
+    setDealerIndex((newRounds.length) % 3);
     setCurrentRound({ bids: { Ayush: '', Harsh: '', Mohit: '' }, hands: { Ayush: '', Harsh: '', Mohit: '' } });
     setPhase('bid');
     setPopup(null);
@@ -354,7 +365,7 @@ const GameSession = ({ onNavigate, resumeGame }) => {
 
       {/* Main Player Cards */}
       <div className="px-6 mb-12 grid grid-cols-3 gap-4">
-        {playersWithDiffs.map(p => (
+        {playersWithDiffs.map((p, idx) => (
           <div
             key={p.name}
             className={`card relative flex flex-col items-start p-5 transition-all ${p.diff === 0 && p.score > 0 ? 'ring-2 ring-primary-500 bg-primary-500/5' : ''}`}
@@ -362,22 +373,27 @@ const GameSession = ({ onNavigate, resumeGame }) => {
             {p.diff === 0 && p.score > 0 && (
               <div className="absolute top-2 right-2 bg-primary-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded shadow-lg">LEAD</div>
             )}
-            <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${p.name === 'Ayush' ? 'text-amber-500' : p.name === 'Harsh' ? 'text-blue-500' : 'text-orange-500'}`}>
+            {/* Dealer Icon */}
+            {idx === dealerIndex && !gameFinished && (
+              <div className="absolute top-2 left-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center border-2 border-dark-900 shadow-lg animate-pulse">
+                <span className="text-[10px] font-black text-dark-900">D</span>
+              </div>
+            )}
+            <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${p.name === 'Ayush' ? 'text-amber-500' : p.name === 'Harsh' ? 'text-blue-500' : 'text-orange-500'} ${idx === dealerIndex ? 'pl-4' : ''}`}>
               {p.name}
             </p>
             {rounds.length > 0 && liveNicknames.bidNicks[p.name] && (
-              <div className="flex flex-col gap-0.5 mb-3">
-                <span className={`text-[7px] font-black uppercase tracking-wider ${liveNicknames.bidNicks[p.name].color}`}>
-                  {liveNicknames.bidNicks[p.name].emoji} {liveNicknames.bidNicks[p.name].label}
-                </span>
-                {liveNicknames.skillNicks[p.name] && (
-                  <span className={`text-[7px] font-black uppercase tracking-wider ${liveNicknames.skillNicks[p.name].color}`}>
-                    {liveNicknames.skillNicks[p.name].emoji} {liveNicknames.skillNicks[p.name].label}
-                  </span>
-                )}
+              <div className="flex flex-col gap-0.5 mb-2">
+                <NicknameBadge nick={liveNicknames.bidNicks[p.name]} />
+                <NicknameBadge nick={liveNicknames.skillNicks[p.name]} />
               </div>
             )}
-            <p className="text-4xl font-black text-white">{p.score}</p>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-4xl font-black text-white">{p.score}</p>
+              {p.diff < 0 && (
+                <span className="text-[10px] font-bold text-rose-500/80 mb-1">{p.diff}</span>
+              )}
+            </div>
           </div>
         ))}
       </div>

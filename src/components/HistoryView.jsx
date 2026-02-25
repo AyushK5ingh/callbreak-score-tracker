@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ArrowLeft, Trophy, Calendar, Hash, TrendingUp, TrendingDown, EyeOff, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getHistory, getPlayerStats, toggleInsignificant } from '../utils/storage';
-import { getBidNicknames, getSkillNicknames, getComebackAndDownfall, getTrendData } from '../utils/analytics';
+import { getBidNicknames, getSkillNicknames, getComebackAndDownfall, getTrendData, getLifetimeStats } from '../utils/analytics';
 
 // Mini SVG Line Chart Component
 const TrendChart = ({ data, height = 80 }) => {
@@ -66,6 +66,13 @@ const HistoryView = ({ onNavigate }) => {
   const stats = getPlayerStats();
   const bidNicks = getBidNicknames(significantHistory);
   const skillNicks = getSkillNicknames(significantHistory);
+  const lifetime = getLifetimeStats(history);
+
+  // Find legends
+  const playerNames = ['Ayush', 'Harsh', 'Mohit'];
+  const mostWins = [...playerNames].sort((a, b) => lifetime[b].wins - lifetime[a].wins)[0];
+  const maxRound = [...playerNames].sort((a, b) => lifetime[b].highRound - lifetime[a].highRound)[0];
+  const mostComebacks = [...playerNames].sort((a, b) => lifetime[b].comebacks - lifetime[a].comebacks)[0];
 
   const handleToggleInsignificant = useCallback((timestamp) => {
     toggleInsignificant(timestamp);
@@ -103,6 +110,34 @@ const HistoryView = ({ onNavigate }) => {
         </button>
         <h2 className="text-xl font-bold text-white tracking-tight">Records</h2>
         <div className="w-10" />
+      </div>
+
+      {/* Hall of Fame Highlights */}
+      <div className="mb-12">
+        <div className="flex items-center space-x-3 mb-6">
+          <Trophy className="w-4 h-4 text-amber-500" />
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Hall of Fame</h3>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 opacity-10"><Trophy className="w-8 h-8 text-amber-500" /></div>
+            <p className="text-[7px] font-black text-amber-500 uppercase tracking-widest mb-1">Most Wins</p>
+            <p className="text-lg font-black text-white">{mostWins}</p>
+            <p className="text-[10px] font-bold text-amber-500/60">{lifetime[mostWins].wins} Titles</p>
+          </div>
+          <div className="bg-gradient-to-br from-primary-500/10 to-transparent border border-primary-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-2 opacity-10"><Hash className="w-8 h-8 text-primary-500" /></div>
+            <p className="text-[7px] font-black text-primary-500 uppercase tracking-widest mb-1">High Round</p>
+            <p className="text-lg font-black text-white">{maxRound}</p>
+            <p className="text-[10px] font-bold text-primary-500/60">{lifetime[maxRound].highRound} Points</p>
+          </div>
+          <div className="bg-gradient-to-br from-rose-500/10 to-transparent border border-rose-500/20 p-4 rounded-[32px] text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 opacity-10"><TrendingUp className="w-8 h-8 text-rose-500" /></div>
+            <p className="text-[7px] font-black text-rose-500 uppercase tracking-widest mb-1">Comebacks</p>
+            <p className="text-lg font-black text-white">{mostComebacks}</p>
+            <p className="text-[10px] font-bold text-rose-500/60">{lifetime[mostComebacks].comebacks} King</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats Summary Cards */}

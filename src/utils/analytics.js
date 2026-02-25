@@ -156,8 +156,43 @@ export const getComebackAndDownfall = (game) => {
 };
 
 /**
- * Get cumulative score arrays for trend graph
+ * Get lifetime statistics for the Hall of Fame
  */
+export const getLifetimeStats = (history) => {
+  const significantHistory = history.filter(g => !g.insignificant);
+  
+  const stats = {
+    Ayush: { wins: 0, highRound: 0, comebacks: 0 },
+    Harsh: { wins: 0, highRound: 0, comebacks: 0 },
+    Mohit: { wins: 0, highRound: 0, comebacks: 0 },
+  };
+
+  significantHistory.forEach(game => {
+    // Track Wins
+    const sorted = [...game.totals].sort((a, b) => b.score - a.score);
+    if (sorted.length > 0) {
+      stats[sorted[0].name].wins++;
+    }
+
+    // Track High Round
+    if (game.roundDetails) {
+      game.roundDetails.forEach(round => {
+        PLAYER_ORDER.forEach(name => {
+          stats[name].highRound = Math.max(stats[name].highRound, round.scores[name] || 0);
+        });
+      });
+    }
+
+    // Track Comebacks
+    const analysis = getComebackAndDownfall(game);
+    if (analysis.comeback) {
+      stats[analysis.comeback].comebacks++;
+    }
+  });
+
+  return stats;
+};
+
 export const getTrendData = (game) => {
   if (!game.roundDetails) return null;
 
