@@ -54,10 +54,24 @@ npm install
 npm run dev
 ```
 
-### 3. Build for Web
+### 3. Environment Setup
+Create a `.env` file in the root directory (refer to `.env.example`):
+```env
+VITE_FIREBASE_API_KEY=your_key
+VITE_FIREBASE_PROJECT_ID=your_id
+...
+```
+
+### 4. Build for Web
 ```bash
 npm run build
 ```
+
+## ⌨️ Key Controls & UX
+- **Theme Switcher**: Rapidly toggle themes from the Home screen cards.
+- **Edit Round**: Tap the **Lock** icon in the history table.
+- **Hands-only Edit**: Only the "Tricks Made" fields are editable to preserve the integrity of players' initial calls.
+- **Long Press**: Coming soon (planned for detailed round analytics).
 
 ## 📱 Mobile Build (Android)
 The app is pre-configured with Capacitor for Android.
