@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import HomeView from './components/HomeView';
 import GameSession from './components/GameSession';
 import HistoryView from './components/HistoryView';
+import PullToRefresh from './components/PullToRefresh';
 import { syncFromCloud } from './utils/storage';
 
 function App() {
@@ -16,10 +17,11 @@ function App() {
     localStorage.setItem('cb-theme', theme);
   }, [theme]);
 
-  // Sync cloud data on app startup
-  useEffect(() => {
+  // Reusable sync function
+  const refreshSync = useCallback(async () => {
     setSyncStatus('syncing');
-    syncFromCloud().then(result => {
+    try {
+      const result = await syncFromCloud();
       if (result.synced) {
         setSyncStatus('synced');
         if (result.count > 0) {
@@ -28,10 +30,26 @@ function App() {
       } else {
         setSyncStatus('offline');
       }
-    }).catch(() => {
+    } catch {
       setSyncStatus('offline');
-    });
+    }
   }, []);
+
+  // Sync cloud data on app startup
+  useEffect(() => {
+    refreshSync();
+  }, [refreshSync]);
+
+  // Sync when app comes back to foreground (tab switch, APK resume)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshSync();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [refreshSync]);
 
   const navigateTo = (newView, data) => {
     if (newView === 'game' && data) {
@@ -43,11 +61,13 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 text-white font-sans selection:bg-amber-500/30">
-      {view === 'home' && <HomeView onNavigate={navigateTo} syncStatus={syncStatus} theme={theme} setTheme={setTheme} />}
-      {view === 'game' && <GameSession key={resumeGame?.timestamp || 'new'} onNavigate={navigateTo} resumeGame={resumeGame} currentTheme={theme} />}
-      {view === 'history' && <HistoryView onNavigate={navigateTo} />}
-    </div>
+    <PullToRefresh onRefresh={refreshSync}>
+      <div className="min-h-screen bg-dark-900 text-white font-sans selection:bg-amber-500/30">
+        {view === 'home' && <HomeView onNavigate={navigateTo} syncStatus={syncStatus} theme={theme} setTheme={setTheme} />}
+        {view === 'game' && <GameSession key={resumeGame?.timestamp || 'new'} onNavigate={navigateTo} resumeGame={resumeGame} currentTheme={theme} />}
+        {view === 'history' && <HistoryView onNavigate={navigateTo} />}
+      </div>
+    </PullToRefresh>
   );
 }
 

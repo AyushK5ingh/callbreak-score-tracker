@@ -106,8 +106,31 @@ const GameSession = ({ onNavigate, resumeGame, currentTheme }) => {
     return () => clearInterval(interval);
   }, [timerActive, popup]);
 
+  const validateBidRange = (bids) => {
+    const invalid = Object.entries(bids).filter(([, v]) => {
+      const n = parseInt(v);
+      return isNaN(n) || n < 2 || n > 17;
+    });
+    return invalid.length === 0 ? null : invalid.map(([name]) => name);
+  };
+
+  const validateHandRange = (hands) => {
+    const invalid = Object.entries(hands).filter(([, v]) => {
+      const n = parseInt(v);
+      return isNaN(n) || n < 0 || n > 17;
+    });
+    return invalid.length === 0 ? null : invalid.map(([name]) => name);
+  };
+
   const startBidLockIn = () => {
     if (Object.values(currentRound.bids).some(v => v === '')) return;
+    const invalidPlayers = validateBidRange(currentRound.bids);
+    if (invalidPlayers) {
+      playSfx('error');
+      triggerHaptic('lock');
+      setPopup({ type: 'range-error', message: `Bids must be between 2 and 17. Check: ${invalidPlayers.join(', ')}` });
+      return;
+    }
     playSfx('click');
     setPopup({ type: 'bid', countdown: 3 });
     setTimerActive(true);
@@ -115,10 +138,18 @@ const GameSession = ({ onNavigate, resumeGame, currentTheme }) => {
 
   const startHandLockIn = () => {
     if (Object.values(currentRound.hands).some(v => v === '')) return;
+    const invalidPlayers = validateHandRange(currentRound.hands);
+    if (invalidPlayers) {
+      playSfx('error');
+      triggerHaptic('lock');
+      setPopup({ type: 'range-error', message: `Hands must be between 0 and 17. Check: ${invalidPlayers.join(', ')}` });
+      return;
+    }
     if (!validateHands(Object.values(currentRound.hands))) {
       playSfx('error');
       triggerHaptic('lock');
-      setPopup({ type: 'hand-warning' });
+      const total = Object.values(currentRound.hands).reduce((s, v) => s + parseInt(v), 0);
+      setPopup({ type: 'range-error', message: `Total hands must equal 17. Currently: ${total}` });
     } else {
       processRound();
     }
@@ -631,29 +662,40 @@ const GameSession = ({ onNavigate, resumeGame, currentTheme }) => {
                 />
               )}
               <div className="w-20 h-20 bg-dark-900/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                {popup.type === 'bid' ? <Lock className="w-10 h-10 text-dark-900" /> : <AlertCircle className="w-10 h-10 text-rose-500" />}
+                {popup.type === 'range-error' ? <AlertCircle className="w-10 h-10 text-rose-500" /> : popup.type === 'bid' ? <Lock className="w-10 h-10 text-dark-900" /> : <AlertCircle className="w-10 h-10 text-rose-500" />}
               </div>
               <h3 className="text-2xl font-black mb-2 tracking-tight">
-                {popup.type === 'bid' ? 'Lock Bids?' : 'Wait!'}
+                {popup.type === 'range-error' ? 'Invalid Input!' : popup.type === 'bid' ? 'Lock Bids?' : 'Wait!'}
               </h3>
               <p className="text-slate-500 font-medium mb-10 px-4">
-                {popup.type === 'bid' ? 'Bids cannot be changed for this round' : 'Total hands made is not 17. Confirm anyway?'}
+                {popup.type === 'range-error' ? popup.message : popup.type === 'bid' ? 'Bids cannot be changed for this round' : 'Total hands made is not 17. Confirm anyway?'}
               </p>
 
               <div className="flex flex-col space-y-3">
-                <button
-                  disabled={popup.countdown > 0}
-                  onClick={popup.type === 'bid' ? confirmBids : processRound}
-                  className="py-4 bg-dark-900 text-white rounded-2xl font-black text-lg disabled:opacity-50 transition-all active:scale-95"
-                >
-                  {popup.countdown !== undefined ? (popup.countdown > 0 ? `YES (${popup.countdown})` : 'CONFIRM YES') : 'CONFIRM YES'}
-                </button>
-                <button
-                  onClick={() => setPopup(null)}
-                  className="py-3 text-slate-400 font-bold hover:text-dark-900 transition-colors"
-                >
-                  CANCEL
-                </button>
+                {popup.type === 'range-error' ? (
+                  <button
+                    onClick={() => setPopup(null)}
+                    className="py-4 bg-dark-900 text-white rounded-2xl font-black text-lg transition-all active:scale-95"
+                  >
+                    GOT IT
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      disabled={popup.countdown > 0}
+                      onClick={popup.type === 'bid' ? confirmBids : processRound}
+                      className="py-4 bg-dark-900 text-white rounded-2xl font-black text-lg disabled:opacity-50 transition-all active:scale-95"
+                    >
+                      {popup.countdown !== undefined ? (popup.countdown > 0 ? `YES (${popup.countdown})` : 'CONFIRM YES') : 'CONFIRM YES'}
+                    </button>
+                    <button
+                      onClick={() => setPopup(null)}
+                      className="py-3 text-slate-400 font-bold hover:text-dark-900 transition-colors"
+                    >
+                      CANCEL
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </motion.div>
